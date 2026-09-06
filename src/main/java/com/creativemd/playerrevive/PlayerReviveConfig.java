@@ -13,7 +13,7 @@ public class PlayerReviveConfig {
 	public float volumeModifier = 1;
 	
 	@CreativeConfig
-	public int playerReviveTime = 100;
+	public int playerReviveTime = 200;
 	@CreativeConfig
 	public int playerReviveSurviveTime = 2400;
 	
