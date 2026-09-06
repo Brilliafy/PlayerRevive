@@ -76,7 +76,7 @@ public class ReviveEventServer {
 			if (!revive.isHealty()) {
 				revive.tick();
 				
-				if (revive.getTimeLeft() % 20 == 0)
+				if (player.ticksExisted % 20 == 0)
 					PlayerReviveServer.sendUpdatePacket(player);
 				
 				player.getFoodStats().setFoodLevel(PlayerRevive.CONFIG.playerFoodAfter);
@@ -131,8 +131,28 @@ public class ReviveEventServer {
 		if (event.getEntityLiving() instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
 			IRevival revive = PlayerReviveServer.getRevival(player);
-			if (!revive.isHealty() && ((event.getSource() != DamageBledToDeath.bledToDeath && !PlayerRevive.CONFIG.bypassDamageSources.contains(event.getSource().damageType)) || revive.isDead()))
+			if (!revive.isHealty() && ((event.getSource() != DamageBledToDeath.bledToDeath && !PlayerRevive.CONFIG.bypassDamageSources.contains(event.getSource().damageType)) || revive.isDead())) {
 				event.setCanceled(true);
+				return;
+			}
+			
+			if (!event.isCanceled() && !player.world.isRemote && event.getAmount() > 0) {
+				EntityPlayer bleedingPlayer = PlayerReviveServer.getBleedingPlayerForHelper(player);
+				if (bleedingPlayer != null) {
+					if (PlayerRevive.CONFIG.damageMultiplierWhileReviving > 1.0F) {
+						event.setAmount(event.getAmount() * PlayerRevive.CONFIG.damageMultiplierWhileReviving);
+					}
+					
+					if (PlayerRevive.CONFIG.resetProgressOnDamage) {
+						IRevival bleedingRevival = PlayerReviveServer.getRevival(bleedingPlayer);
+						if (bleedingRevival != null) {
+							bleedingRevival.resetProgress();
+							PlayerReviveServer.sendUpdatePacket(bleedingPlayer);
+							PlayerReviveServer.forceSyncContainers(bleedingPlayer, player);
+						}
+					}
+				}
+			}
 		}
 	}
 	

@@ -29,9 +29,28 @@ public class Revival implements IRevival {
 	}
 	
 	@Override
+	public void resetProgress() {
+		this.progress = 0;
+	}
+	
+	@Override
 	public void tick() {
-		timeLeft--;
-		progress += revivingPlayers.size();
+		for (int i = revivingPlayers.size() - 1; i >= 0; i--) {
+			EntityPlayer helper = revivingPlayers.get(i);
+			if (helper == null || helper.isDead || helper.getHealth() <= 0.0F) {
+				revivingPlayers.remove(i);
+			}
+		}
+		
+		if (revivingPlayers.isEmpty()) {
+			timeLeft--;
+			progress = 0;
+		} else {
+			if (!PlayerRevive.CONFIG.stopTimerWhileReviving) {
+				timeLeft--;
+			}
+			progress += revivingPlayers.size();
+		}
 		
 		for (int i = 0; i < revivingPlayers.size(); i++) {
 			revivingPlayers.get(i).addExhaustion(PlayerRevive.CONFIG.exhaustion);

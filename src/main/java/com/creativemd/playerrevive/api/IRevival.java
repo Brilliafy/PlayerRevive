@@ -19,6 +19,8 @@ public interface IRevival extends INBTSerializable<NBTTagCompound> {
 	
 	float getProgress();
 	
+	void resetProgress();
+	
 	boolean isRevived();
 	
 	boolean isDead();

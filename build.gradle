@@ -1,0 +1,70 @@
+buildscript {
+    repositories {
+        jcenter()
+        maven { url = "https://files.minecraftforge.net/maven" }
+    }
+    dependencies {
+        classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+    }
+}
+apply plugin: "net.minecraftforge.gradle.forge"
+
+version = "1.2.41"
+group = "com.creativemd.playerrevive"
+archivesBaseName = "PlayerRevive"
+
+sourceCompatibility = targetCompatibility = "1.8"
+compileJava {
+    sourceCompatibility = targetCompatibility = "1.8"
+}
+
+minecraft {
+    version = "1.12.2-14.23.5.2847"
+    runDir = "run"
+    mappings = "stable_39"
+    makeObfSourceJar = false
+    replace "@VERSION@", project.version
+}
+
+getAssets.enabled = false
+
+repositories {
+    maven { url "https://dvs1.progwml6.com/files/maven" }
+    maven { url "https://modmaven.dev/" }
+    maven { url "https://www.cursemaven.com" }
+    flatDir {
+        dirs "/home/Aelfwif/Downloads/PrismLauncher-Linux-Qt6-Portable-11.0.3/instances/RLCraft Dregora/minecraft/mods"
+    }
+}
+
+dependencies {
+    compileOnly files("/home/Aelfwif/Downloads/PrismLauncher-Linux-Qt6-Portable-11.0.3/instances/RLCraft Dregora/minecraft/mods/CreativeCore_v1.10.71_mc1.12.2.jar")
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "mcversion", project.minecraft.version
+    from(sourceSets.main.resources.srcDirs) {
+        include "mcmod.info"
+        expand "version":project.version, "mcversion":project.minecraft.version
+    }
+    from(sourceSets.main.resources.srcDirs) {
+        exclude "mcmod.info"
+    }
+}
+
+jar {
+    manifest {
+        attributes([
+            "Specification-Title": "PlayerRevive",
+            "Specification-Vendor": "CreativeMD",
+            "Specification-Version": "1",
+            "Implementation-Title": project.name,
+            "Implementation-Version": "${version}",
+            "Implementation-Vendor": "CreativeMD",
+            "Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+        ])
+    }
+}
+
+jar.finalizedBy("reobfJar")

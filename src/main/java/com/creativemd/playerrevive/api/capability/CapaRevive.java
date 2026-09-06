@@ -46,6 +46,10 @@ public class CapaRevive {
 		}
 		
 		@Override
+		public void resetProgress() {
+		}
+		
+		@Override
 		public boolean isRevived() {
 			return false;
 		}

@@ -15,7 +15,14 @@ public class PlayerReviveConfig {
 	@CreativeConfig
 	public int playerReviveTime = 100;
 	@CreativeConfig
-	public int playerReviveSurviveTime = 1200;
+	public int playerReviveSurviveTime = 2400;
+	
+	@CreativeConfig
+	public float damageMultiplierWhileReviving = 3.0F;
+	@CreativeConfig
+	public boolean resetProgressOnDamage = true;
+	@CreativeConfig
+	public boolean stopTimerWhileReviving = true;
 	
 	@CreativeConfig
 	@CreativeConfig.IntRange(min = 1, max = 20)
