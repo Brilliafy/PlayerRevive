@@ -26,12 +26,22 @@ public class SubContainerRevive extends SubContainer {
 	
 	public int currentTick = 0;
 	
+	public void forceSync() {
+		if (revive != null) {
+			NBTTagCompound nbt = revive.serializeNBT();
+			sendNBTToGui(nbt);
+			currentTick = 0;
+		}
+	}
+	
 	@Override
 	public void onTick() {
 		currentTick++;
-		if (currentTick > 10) {
-			NBTTagCompound nbt = revive.serializeNBT();
-			sendNBTToGui(nbt);
+		if (currentTick >= 2) {
+			if (revive != null) {
+				NBTTagCompound nbt = revive.serializeNBT();
+				sendNBTToGui(nbt);
+			}
 			currentTick = 0;
 		}
 	}
@@ -45,8 +55,12 @@ public class SubContainerRevive extends SubContainer {
 	@Override
 	public void onClosed() {
 		super.onClosed();
-		if (isHelping && !player.getEntityWorld().isRemote)
+		if (isHelping && !player.getEntityWorld().isRemote) {
 			PlayerReviveServer.removePlayerAsHelper(player);
+			if (revive != null && !revive.isHealty()) {
+				revive.resetProgress();
+			}
+		}
 	}
 	
 }

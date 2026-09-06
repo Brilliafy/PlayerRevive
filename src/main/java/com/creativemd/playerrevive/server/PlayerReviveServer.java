@@ -12,6 +12,11 @@ import com.creativemd.playerrevive.api.event.PlayerKilledEvent;
 import com.creativemd.playerrevive.api.event.PlayerRevivedEvent;
 import com.creativemd.playerrevive.packet.ReviveUpdatePacket;
 import com.mojang.authlib.GameProfile;
+import java.util.UUID;
+import net.minecraft.server.MinecraftServer;
+import com.creativemd.creativecore.common.gui.container.SubContainer;
+import com.creativemd.creativecore.common.gui.mc.ContainerSub;
+import com.creativemd.playerrevive.gui.SubContainerRevive;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -100,6 +105,43 @@ public class PlayerReviveServer {
 			revive.getRevivingPlayers().remove(player);
 		}
 		
+	}
+	
+	public static EntityPlayer getBleedingPlayerForHelper(EntityPlayer helper) {
+		if (helper == null || helper.world == null || helper.world.isRemote)
+			return null;
+		MinecraftServer server = ReviveEventServer.getMinecraftServer();
+		if (server == null)
+			return null;
+		UUID helperUuid = helper.getUniqueID();
+		for (EntityPlayerMP member : server.getPlayerList().getPlayers()) {
+			IRevival revive = getRevival(member);
+			if (revive != null && !revive.isHealty()) {
+				for (EntityPlayer reviving : revive.getRevivingPlayers()) {
+					if (reviving != null && reviving.getUniqueID().equals(helperUuid)) {
+						return member;
+					}
+				}
+			}
+		}
+		return null;
+	}
+	
+	public static void syncGui(EntityPlayer player) {
+		if (player != null && player.openContainer instanceof ContainerSub) {
+			for (SubContainer sub : ((ContainerSub) player.openContainer).layers) {
+				if (sub instanceof SubContainerRevive) {
+					((SubContainerRevive) sub).forceSync();
+				}
+			}
+		}
+	}
+	
+	public static void forceSyncContainers(EntityPlayer bleedingPlayer, EntityPlayer helper) {
+		syncGui(bleedingPlayer);
+		if (helper != null && helper != bleedingPlayer) {
+			syncGui(helper);
+		}
 	}
 	
 	public void loadSide() {
