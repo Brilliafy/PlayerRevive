@@ -1,7 +1,7 @@
 [
 {
   "modid": "playerrevive",
-  "name": "Player Revive (Reforged / First Aid Edition)",
+  "name": "Player Revive: First Aid Edition",
   "description": "A tactical rework and modpack-oriented fork of CreativeMD's PlayerRevive for Minecraft 1.12.2, featuring First Aid & PotionCore compatibility, Totem of Undying support, singleplayer toggle, and high-stakes revive mechanics.",
   "mcversion": "${mcversion}",
   "url": "https://github.com/CreativeMD/PlayerRevive",

@@ -1,11 +1,11 @@
-# PlayerRevive: Reforged (Minecraft 1.12.2)
+# PlayerRevive: First Aid Edition (Minecraft 1.12.2)
 
 [![Minecraft 1.12.2](https://img.shields.io/badge/Minecraft-1.12.2-blue.svg)](https://minecraft.net/)
 [![Forge](https://img.shields.io/badge/Forge-14.23.5.2847+-orange.svg)](https://files.minecraftforge.net/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-green.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Requires CreativeCore](https://img.shields.io/badge/Requires-CreativeCore-red.svg)](https://curseforge.com/minecraft/mc-mods/creativecore)
 
-**PlayerRevive: Reforged** is an enhanced, modpack-optimized fork of [CreativeMD's PlayerRevive](https://github.com/CreativeMD/PlayerRevive) for Minecraft 1.12.2.
+**PlayerRevive: First Aid Edition** is an enhanced, modpack-optimized fork of [CreativeMD's PlayerRevive](https://github.com/CreativeMD/PlayerRevive) for Minecraft 1.12.2.
 
 Designed specifically for challenging multiplayer environments and hardcore modpacks (such as RLCraft, Dregora, and Rebirth of the Night), this edition resolves critical mod conflicts (such as **First Aid** limb death and **Totem of Undying** bypasses) while transforming reviving into a high-stakes, tactical team interaction.
 
@@ -56,9 +56,9 @@ Upstream PlayerRevive allowed helpers to revive teammates with virtually zero co
 
 ---
 
-## 📊 Comparison: Upstream vs. Reforged Fork
+## 📊 Comparison: Upstream vs. First Aid Edition
 
-| Feature | CreativeMD / PlayerRevive (Upstream) | PlayerRevive: Reforged (This Fork) |
+| Feature | CreativeMD / PlayerRevive (Upstream) | PlayerRevive: First Aid Edition (This Fork) |
 | :--- | :--- | :--- |
 | **First Aid Compatibility** | ❌ Fatal head/body injury causes instant death or HP desync | ✅ Fully integrated with health models & sync packets |
 | **Totem of Undying** | ⚠️ Can be ignored or trigger incorrectly after downing | ✅ Checked first; triggers vanilla totem mechanics |
@@ -126,7 +126,7 @@ This project uses **ForgeGradle 2.3** and requires **Java 8 (JDK 1.8)**.
    ```
 3. The compiled jar will be located in:
    ```
-   build/libs/PlayerRevive-1.2.41-moson.jar
+   build/libs/PlayerRevive-FirstAidEdition-1.2.41.jar
    ```
 
 *Note: Dependencies (CreativeCore, First Aid, and PotionCore) are automatically resolved through [CurseMaven](https://cursemaven.com/). No local jar installations are required.*

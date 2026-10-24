@@ -1,6 +1,6 @@
-# PlayerRevive: Reforged (1.12.2)
+# PlayerRevive: First Aid Edition (1.12.2)
 
-**PlayerRevive: Reforged** is a drop-in, modpack-optimized fork of [CreativeMD's PlayerRevive](https://www.curseforge.com/minecraft/mc-mods/playerrevive) for **Minecraft 1.12.2**.
+**PlayerRevive: First Aid Edition** is a drop-in, modpack-optimized fork of [CreativeMD's PlayerRevive](https://www.curseforge.com/minecraft/mc-mods/playerrevive) for **Minecraft 1.12.2**.
 
 It solves long-standing modpack incompatibilities—most notably fixing the notorious **First Aid** instant death/limb desync issue and **Totem of Undying** bypasses—while introducing high-stakes, tactical revival mechanics for multiplayer co-op.
 
@@ -57,7 +57,7 @@ This fork addresses these pain points with zero compromises:
 2. **[CreativeCore](https://www.curseforge.com/minecraft/mc-mods/creativecore)** (Version `1.10.71` or newer for 1.12.2).
 3. *(Optional)* **[First Aid](https://www.curseforge.com/minecraft/mc-mods/first-aid)** and/or **[Potion Core](https://www.curseforge.com/minecraft/mc-mods/potion-core)**.
 
-Simply drop `PlayerRevive-1.2.41-moson.jar` into your `mods/` directory. It acts as a drop-in replacement for the original PlayerRevive.
+Simply drop `PlayerRevive-FirstAidEdition-1.2.41.jar` into your `mods/` directory. It acts as a drop-in replacement for the original PlayerRevive.
 
 ---
 

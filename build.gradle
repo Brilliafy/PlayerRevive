@@ -9,9 +9,9 @@ buildscript {
 }
 apply plugin: "net.minecraftforge.gradle.forge"
 
-version = "1.2.41-moson"
+version = "1.2.41"
 group = "com.creativemd.playerrevive"
-archivesBaseName = "PlayerRevive"
+archivesBaseName = "PlayerRevive-FirstAidEdition"
 
 sourceCompatibility = targetCompatibility = "1.8"
 compileJava {
