@@ -38,6 +38,8 @@ import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.network.NetworkRegistry;
+import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 
@@ -47,6 +49,8 @@ public class PlayerRevive {
 	
 	@SidedProxy(clientSide = "com.creativemd.playerrevive.client.PlayerReviveClient", serverSide = "com.creativemd.playerrevive.server.PlayerReviveServer")
 	public static PlayerReviveServer proxy;
+	
+	public static SimpleNetworkWrapper NETWORK;
 	
 	public static SoundEvent deathSound = new SoundEvent(new ResourceLocation(PlayerRevive.modid, "death")).setRegistryName(new ResourceLocation(PlayerRevive.modid, "death"));
 	public static SoundEvent revivedSound = new SoundEvent(new ResourceLocation(PlayerRevive.modid, "revived")).setRegistryName(new ResourceLocation(PlayerRevive.modid, "revived"));
@@ -104,6 +108,8 @@ public class PlayerRevive {
 	
 	@EventHandler
 	public void init(FMLInitializationEvent event) {
+		NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel("playerrevive_net");
+		NETWORK.registerMessage(ReviveUpdatePacket.Handler.class, ReviveUpdatePacket.class, 0, Side.CLIENT);
 		CreativeCorePacket.registerPacket(ReviveUpdatePacket.class);
 		
 		GuiHandler.registerGuiHandler("plrevive", new CustomGuiHandler() {
@@ -142,6 +148,9 @@ public class PlayerRevive {
 		CreativeConfigRegistry.ROOT.registerValue(modid, CONFIG = new PlayerReviveConfig());
 		
 		MinecraftForge.EVENT_BUS.register(new ReviveEventServer());
+		if (net.minecraftforge.fml.common.Loader.isModLoaded("firstaid")) {
+			com.creativemd.playerrevive.compat.firstaid.FirstAidHandler.init();
+		}
 		
 		proxy.loadSide();
 	}

@@ -58,7 +58,9 @@ public class SubContainerRevive extends SubContainer {
 		if (isHelping && !player.getEntityWorld().isRemote) {
 			PlayerReviveServer.removePlayerAsHelper(player);
 			if (revive != null && !revive.isHealty()) {
-				revive.resetProgress();
+				if (revive instanceof com.creativemd.playerrevive.Revival) {
+					((com.creativemd.playerrevive.Revival) revive).resetProgress();
+				}
 			}
 		}
 	}

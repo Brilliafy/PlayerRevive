@@ -97,12 +97,19 @@ public class ReviveEventClient {
 		if (event.phase == Phase.START)
 			return;
 		IRevival revive = PlayerReviveServer.getRevival(event.player);
-		if (!revive.isHealty() && event.player != mc.player) {
-			AxisAlignedBB axisalignedbb = event.player.getEntityBoundingBox();
-			double width = 0.6;
-			double height = 1.8;
-			
-			event.player.setEntityBoundingBox(new AxisAlignedBB(event.player.posX - height, event.player.posY - width / 2D, event.player.posZ - width / 2D, event.player.posX, event.player.posY + width / 2D, event.player.posZ + width / 2D));
+		if (!revive.isHealty()) {
+			if (event.player == mc.player) {
+				mc.player.motionX = 0;
+				mc.player.motionZ = 0;
+				if (mc.player.motionY > 0)
+					mc.player.motionY = 0;
+			} else {
+				AxisAlignedBB axisalignedbb = event.player.getEntityBoundingBox();
+				double width = 0.6;
+				double height = 1.8;
+				
+				event.player.setEntityBoundingBox(new AxisAlignedBB(event.player.posX - height, event.player.posY - width / 2D, event.player.posZ - width / 2D, event.player.posX, event.player.posY + width / 2D, event.player.posZ + width / 2D));
+			}
 		}
 	}
 	

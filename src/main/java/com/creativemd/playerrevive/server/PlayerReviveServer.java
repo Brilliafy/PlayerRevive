@@ -3,6 +3,7 @@ package com.creativemd.playerrevive.server;
 import java.io.IOException;
 import java.util.Iterator;
 
+import com.creativemd.creativecore.common.gui.opener.GuiHandler;
 import com.creativemd.creativecore.common.packet.PacketHandler;
 import com.creativemd.playerrevive.PlayerRevive;
 import com.creativemd.playerrevive.api.CombatTrackerClone;
@@ -34,13 +35,38 @@ public class PlayerReviveServer {
 	}
 	
 	public static void sendUpdatePacket(EntityPlayer player) {
+		if (player == null || player.world == null)
+			return;
 		ReviveUpdatePacket packet = new ReviveUpdatePacket(player);
-		PacketHandler.sendPacketToTrackingPlayers(packet, (EntityPlayerMP) player);
-		PacketHandler.sendPacketToPlayer(packet, (EntityPlayerMP) player);
+		if (PlayerRevive.NETWORK != null) {
+			try {
+				PlayerRevive.NETWORK.sendToAllTracking(packet, player);
+				if (player instanceof EntityPlayerMP) {
+					PlayerRevive.NETWORK.sendTo(packet, (EntityPlayerMP) player);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		try {
+			if (player instanceof EntityPlayerMP) {
+				PacketHandler.sendPacketToTrackingPlayers(packet, (EntityPlayerMP) player);
+				PacketHandler.sendPacketToPlayer(packet, (EntityPlayerMP) player);
+			}
+		} catch (Exception ignored) {}
+	}
+	
+	public static boolean checkTotemOrPotionResurrection(EntityPlayer player, DamageSource source) {
+		return ResurrectionHelper.checkTotemOrPotionResurrection(player, source);
 	}
 	
 	public static void startBleeding(EntityPlayer player, DamageSource source) {
+		if (checkTotemOrPotionResurrection(player, source))
+			return;
 		getRevival(player).startBleeding(player, source);
+		if (player instanceof EntityPlayerMP) {
+			GuiHandler.openGui("plrevive", new net.minecraft.nbt.NBTTagCompound(), (EntityPlayerMP) player);
+		}
 		sendUpdatePacket(player);
 	}
 	
@@ -51,6 +77,9 @@ public class PlayerReviveServer {
 		for (int i = 0; i < revive.getRevivingPlayers().size(); i++) {
 			revive.getRevivingPlayers().get(i).closeScreen();
 		}
+		if (player instanceof EntityPlayerMP) {
+			player.closeScreen();
+		}
 	}
 	
 	public static void revive(EntityPlayer player) {
@@ -58,6 +87,13 @@ public class PlayerReviveServer {
 		MinecraftForge.EVENT_BUS.post(new PlayerRevivedEvent(player, revive));
 		revive.stopBleeding();
 		resetPlayer(player, revive);
+		
+		if (net.minecraftforge.fml.common.Loader.isModLoaded("firstaid") && PlayerRevive.CONFIG.enableFirstAidCompatibility) {
+			com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.revivePlayer(player);
+			com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.setPlayerHealthDirect(player, (float) PlayerRevive.CONFIG.playerHealthAfter);
+		} else {
+			player.setHealth(PlayerRevive.CONFIG.playerHealthAfter);
+		}
 		
 		if (!PlayerRevive.CONFIG.disableSounds)
 			player.world.playSound(null, player.getPosition(), PlayerRevive.revivedSound, SoundCategory.PLAYERS, 1, 1);
@@ -73,9 +109,14 @@ public class PlayerReviveServer {
 		if (trackerClone != null)
 			trackerClone.overwriteTracker(player.getCombatTracker());
 		revive.kill();
-		player.setHealth(0.0F);
-		player.onDeath(source);
 		resetPlayer(player, revive);
+		if (net.minecraftforge.fml.common.Loader.isModLoaded("firstaid") && PlayerRevive.CONFIG.enableFirstAidCompatibility) {
+			com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.setWaitingForHelp(player, false);
+			com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.setPlayerHealthDirect(player, 0.0F);
+		} else {
+			player.setHealth(0.0F);
+		}
+		player.onDeath(source);
 		
 		if (!PlayerRevive.CONFIG.disableSounds)
 			player.world.playSound(null, player.getPosition(), PlayerRevive.deathSound, SoundCategory.PLAYERS, 1, 1);
@@ -99,18 +140,24 @@ public class PlayerReviveServer {
 	}
 	
 	public static void removePlayerAsHelper(EntityPlayer player) {
-		for (Iterator<EntityPlayerMP> iterator = ReviveEventServer.getMinecraftServer().getPlayerList().getPlayers().iterator(); iterator.hasNext();) {
-			EntityPlayerMP member = iterator.next();
-			IRevival revive = getRevival(member);
-			revive.getRevivingPlayers().remove(player);
+		MinecraftServer server = ReviveEventServer.getMinecraftServer();
+		if (server == null && player != null)
+			server = player.getServer();
+		if (server != null) {
+			for (Iterator<EntityPlayerMP> iterator = server.getPlayerList().getPlayers().iterator(); iterator.hasNext();) {
+				EntityPlayerMP member = iterator.next();
+				IRevival revive = getRevival(member);
+				revive.getRevivingPlayers().remove(player);
+			}
 		}
-		
 	}
 	
 	public static EntityPlayer getBleedingPlayerForHelper(EntityPlayer helper) {
 		if (helper == null || helper.world == null || helper.world.isRemote)
 			return null;
 		MinecraftServer server = ReviveEventServer.getMinecraftServer();
+		if (server == null)
+			server = helper.getServer();
 		if (server == null)
 			return null;
 		UUID helperUuid = helper.getUniqueID();
@@ -145,6 +192,10 @@ public class PlayerReviveServer {
 	}
 	
 	public void loadSide() {
+		
+	}
+	
+	public void handleClientPacket(ReviveUpdatePacket message) {
 		
 	}
 }

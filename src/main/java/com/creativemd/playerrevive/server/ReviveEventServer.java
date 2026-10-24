@@ -1,16 +1,21 @@
 package com.creativemd.playerrevive.server;
 
+import com.creativemd.creativecore.common.gui.mc.ContainerSub;
 import com.creativemd.creativecore.common.gui.opener.GuiHandler;
 import com.creativemd.playerrevive.CapaReviveProvider;
 import com.creativemd.playerrevive.PlayerRevive;
 import com.creativemd.playerrevive.api.DamageBledToDeath;
 import com.creativemd.playerrevive.api.IRevival;
+import com.creativemd.playerrevive.packet.ReviveUpdatePacket;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.DamageSource;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraftforge.event.AttachCapabilitiesEvent;
@@ -24,24 +29,22 @@ import net.minecraftforge.fml.common.gameevent.TickEvent.Phase;
 import net.minecraftforge.fml.common.gameevent.TickEvent.PlayerTickEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
+import net.minecraftforge.fml.common.FMLCommonHandler;
 import net.minecraftforge.fml.server.FMLServerHandler;
 
 public class ReviveEventServer {
 	
-	private static Boolean isClient = null;
-	
 	public static boolean isClient() {
-		if (isClient == null) {
-			try {
-				isClient = Class.forName("net.minecraft.client.Minecraft") != null;
-			} catch (ClassNotFoundException e) {
-				isClient = false;
-			}
+		try {
+			return FMLCommonHandler.instance().getSide().isClient();
+		} catch (Throwable t) {
+			return false;
 		}
-		return isClient;
 	}
 	
 	public static boolean isReviveActive() {
+		if (PlayerRevive.CONFIG != null && PlayerRevive.CONFIG.enableInSingleplayer)
+			return true;
 		if (isClient())
 			return !isSinglePlayer();
 		return true;
@@ -53,6 +56,9 @@ public class ReviveEventServer {
 	}
 	
 	public static MinecraftServer getMinecraftServer() {
+		MinecraftServer server = FMLCommonHandler.instance().getMinecraftServerInstance();
+		if (server != null)
+			return server;
 		if (isClient())
 			return getMinecraftServerClient();
 		return FMLServerHandler.instance().getServer();
@@ -76,11 +82,25 @@ public class ReviveEventServer {
 			if (!revive.isHealty()) {
 				revive.tick();
 				
+				player.motionX = 0;
+				player.motionZ = 0;
+				if (player.motionY > 0)
+					player.motionY = 0;
+				player.velocityChanged = true;
+				
+				if (player instanceof EntityPlayerMP && !(player.openContainer instanceof ContainerSub)) {
+					GuiHandler.openGui("plrevive", new NBTTagCompound(), (EntityPlayerMP) player);
+				}
+				
 				if (player.ticksExisted % 20 == 0)
 					PlayerReviveServer.sendUpdatePacket(player);
 				
 				player.getFoodStats().setFoodLevel(PlayerRevive.CONFIG.playerFoodAfter);
-				player.setHealth(PlayerRevive.CONFIG.playerHealthAfter);
+				if (net.minecraftforge.fml.common.Loader.isModLoaded("firstaid") && PlayerRevive.CONFIG.enableFirstAidCompatibility) {
+					com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.setPlayerHealthDirect(player, (float) PlayerRevive.CONFIG.playerHealthAfter);
+				} else {
+					player.setHealth(PlayerRevive.CONFIG.playerHealthAfter);
+				}
 				player.capabilities.disableDamage = true;
 				player.setEntityInvulnerable(true);
 				
@@ -126,12 +146,38 @@ public class ReviveEventServer {
 		}
 	}
 	
+	public static boolean isDamageFromAnotherEntity(DamageSource source, EntityPlayer player) {
+		if (source == null)
+			return false;
+		
+		String type = source.getDamageType();
+		if ("starve".equals(type) || "cactus".equals(type) || "magic".equals(type) || "wither".equals(type)
+				|| "inFire".equals(type) || "onFire".equals(type) || "lava".equals(type) || "hotFloor".equals(type)
+				|| "fall".equals(type) || "drown".equals(type) || "inWall".equals(type) || "cramming".equals(type)
+				|| "flyIntoWall".equals(type) || "outOfWorld".equals(type) || "generic".equals(type)
+				|| "lightningBolt".equals(type)) {
+			return false;
+		}
+		
+		Entity trueSource = source.getTrueSource();
+		if (trueSource != null) {
+			return trueSource != player;
+		}
+		
+		Entity immediateSource = source.getImmediateSource();
+		if (immediateSource != null) {
+			return immediateSource != player;
+		}
+		
+		return false;
+	}
+	
 	@SubscribeEvent
 	public void playerDamage(LivingHurtEvent event) {
 		if (event.getEntityLiving() instanceof EntityPlayer) {
 			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
 			IRevival revive = PlayerReviveServer.getRevival(player);
-			if (!revive.isHealty() && ((event.getSource() != DamageBledToDeath.bledToDeath && !PlayerRevive.CONFIG.bypassDamageSources.contains(event.getSource().damageType)) || revive.isDead())) {
+			if (!revive.isHealty() && ((event.getSource() != DamageBledToDeath.bledToDeath && !event.getSource().canHarmInCreative() && !PlayerRevive.CONFIG.bypassDamageSources.contains(event.getSource().damageType)) || revive.isDead())) {
 				event.setCanceled(true);
 				return;
 			}
@@ -139,14 +185,30 @@ public class ReviveEventServer {
 			if (!event.isCanceled() && !player.world.isRemote && event.getAmount() > 0) {
 				EntityPlayer bleedingPlayer = PlayerReviveServer.getBleedingPlayerForHelper(player);
 				if (bleedingPlayer != null) {
-					if (PlayerRevive.CONFIG.damageMultiplierWhileReviving > 1.0F) {
-						event.setAmount(event.getAmount() * PlayerRevive.CONFIG.damageMultiplierWhileReviving);
+					boolean isFromEntity = isDamageFromAnotherEntity(event.getSource(), player);
+					
+					boolean applyMultiplier = !PlayerRevive.CONFIG.multiplyOnlyEntityDamage || isFromEntity;
+					if (applyMultiplier) {
+						float min = PlayerRevive.CONFIG.damageMultiplierMin;
+						float max = PlayerRevive.CONFIG.damageMultiplierMax;
+						if (max < min) {
+							float temp = min;
+							min = max;
+							max = temp;
+						}
+						float multiplier = min;
+						if (max > min) {
+							multiplier = min + (float) (Math.random() * (max - min));
+						}
+						if (multiplier > 1.0F) {
+							event.setAmount(event.getAmount() * multiplier);
+						}
 					}
 					
-					if (PlayerRevive.CONFIG.resetProgressOnDamage) {
+					if (PlayerRevive.CONFIG.resetProgressOnDamage && isFromEntity) {
 						IRevival bleedingRevival = PlayerReviveServer.getRevival(bleedingPlayer);
-						if (bleedingRevival != null) {
-							bleedingRevival.resetProgress();
+						if (bleedingRevival instanceof com.creativemd.playerrevive.Revival) {
+							((com.creativemd.playerrevive.Revival) bleedingRevival).resetProgress();
 							PlayerReviveServer.sendUpdatePacket(bleedingPlayer);
 							PlayerReviveServer.forceSyncContainers(bleedingPlayer, player);
 						}
@@ -158,12 +220,19 @@ public class ReviveEventServer {
 	
 	@SubscribeEvent(priority = EventPriority.HIGHEST)
 	public void playerDied(LivingDeathEvent event) {
-		if (event.getEntityLiving() instanceof EntityPlayer && isReviveActive() && !event.getEntityLiving().world.isRemote && event.getSource() != DamageBledToDeath.bledToDeath && !PlayerRevive.CONFIG.bypassDamageSources.contains(event.getSource().damageType)) {
+		if (event.isCanceled())
+			return;
+		if (event.getEntityLiving() instanceof EntityPlayer && isReviveActive() && !event.getEntityLiving().world.isRemote && event.getSource() != DamageBledToDeath.bledToDeath && !event.getSource().canHarmInCreative() && !PlayerRevive.CONFIG.bypassDamageSources.contains(event.getSource().damageType)) {
 			EntityPlayer player = (EntityPlayer) event.getEntityLiving();
 			IRevival revive = PlayerReviveServer.getRevival(player);
 			
 			if (revive.isDead()) {
 				revive.stopBleeding();
+				return;
+			}
+			
+			if (PlayerReviveServer.checkTotemOrPotionResurrection(player, event.getSource())) {
+				event.setCanceled(true);
 				return;
 			}
 			
@@ -176,11 +245,37 @@ public class ReviveEventServer {
 			
 			event.setCanceled(true);
 			
-			player.setHealth(0.5F);
+			if (net.minecraftforge.fml.common.Loader.isModLoaded("firstaid") && PlayerRevive.CONFIG.enableFirstAidCompatibility) {
+				com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.setWaitingForHelp(player, true);
+				com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.ensureCriticalPartsAlive(player, 1.0F);
+				com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.setPlayerHealthDirect(player, (float) PlayerRevive.CONFIG.playerHealthAfter);
+				com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.syncDamageModel(player);
+			} else {
+				player.setHealth((float) PlayerRevive.CONFIG.playerHealthAfter);
+			}
 			player.getFoodStats().setFoodLevel(1);
+			
+			if (player instanceof EntityPlayerMP) {
+				GuiHandler.openGui("plrevive", new NBTTagCompound(), (EntityPlayerMP) player);
+			}
+			PlayerReviveServer.sendUpdatePacket(player);
 			
 			if (!PlayerRevive.CONFIG.disableBleedingMessage)
 				player.getServer().getPlayerList().sendMessage(new TextComponentTranslation("playerrevive.chat.bleeding", player.getDisplayNameString()));
+		}
+	}
+	
+	@SubscribeEvent
+	public void onStartTracking(net.minecraftforge.event.entity.player.PlayerEvent.StartTracking event) {
+		if (event.getTarget() instanceof EntityPlayer && event.getEntityPlayer() instanceof EntityPlayerMP) {
+			EntityPlayer target = (EntityPlayer) event.getTarget();
+			IRevival revive = PlayerReviveServer.getRevival(target);
+			if (revive != null && !revive.isHealty()) {
+				ReviveUpdatePacket packet = new ReviveUpdatePacket(target);
+				if (PlayerRevive.NETWORK != null) {
+					PlayerRevive.NETWORK.sendTo(packet, (EntityPlayerMP) event.getEntityPlayer());
+				}
+			}
 		}
 	}
 	

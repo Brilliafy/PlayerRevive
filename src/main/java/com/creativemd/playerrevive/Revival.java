@@ -6,6 +6,7 @@ import java.util.List;
 import com.creativemd.playerrevive.api.CombatTrackerClone;
 import com.creativemd.playerrevive.api.DamageBledToDeath;
 import com.creativemd.playerrevive.api.IRevival;
+import com.creativemd.playerrevive.server.PlayerReviveServer;
 
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
@@ -53,7 +54,10 @@ public class Revival implements IRevival {
 		}
 		
 		for (int i = 0; i < revivingPlayers.size(); i++) {
-			revivingPlayers.get(i).addExhaustion(PlayerRevive.CONFIG.exhaustion);
+			EntityPlayer helper = revivingPlayers.get(i);
+			if (helper != null && helper.getFoodStats().getFoodLevel() > 1 && PlayerRevive.CONFIG.exhaustion > 0) {
+				helper.addExhaustion(PlayerRevive.CONFIG.exhaustion);
+			}
 		}
 	}
 	
@@ -78,11 +82,26 @@ public class Revival implements IRevival {
 	
 	@Override
 	public void startBleeding(EntityPlayer player, DamageSource source) {
+		if (player != null && PlayerReviveServer.checkTotemOrPotionResurrection(player, source))
+			return;
 		this.healty = false;
 		this.progress = 0;
 		this.timeLeft = PlayerRevive.CONFIG.playerReviveSurviveTime;
 		this.lastSource = source;
-		this.trackerClone = new CombatTrackerClone(player.getCombatTracker());
+		if (player != null) {
+			this.trackerClone = new CombatTrackerClone(player.getCombatTracker());
+			if (!player.world.isRemote) {
+				player.capabilities.disableDamage = true;
+				player.setEntityInvulnerable(true);
+				if (net.minecraftforge.fml.common.Loader.isModLoaded("firstaid") && PlayerRevive.CONFIG.enableFirstAidCompatibility) {
+					com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.setWaitingForHelp(player, true);
+					com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.ensureCriticalPartsAlive(player, 1.0F);
+					com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.setPlayerHealthDirect(player, Math.max(1.0F, (float) PlayerRevive.CONFIG.playerHealthAfter));
+					com.creativemd.playerrevive.compat.firstaid.FirstAidHelper.syncDamageModel(player);
+				}
+				PlayerReviveServer.sendUpdatePacket(player);
+			}
+		}
 	}
 	
 	@Override
