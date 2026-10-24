@@ -9,7 +9,7 @@ buildscript {
 }
 apply plugin: "net.minecraftforge.gradle.forge"
 
-version = "1.2.41"
+version = "1.2.41-moson"
 group = "com.creativemd.playerrevive"
 archivesBaseName = "PlayerRevive"
 
@@ -31,14 +31,13 @@ getAssets.enabled = false
 repositories {
     maven { url "https://dvs1.progwml6.com/files/maven" }
     maven { url "https://modmaven.dev/" }
-    maven { url "https://www.cursemaven.com" }
-    flatDir {
-        dirs "/home/Aelfwif/Downloads/PrismLauncher-Linux-Qt6-Portable-11.0.3/instances/RLCraft Dregora/minecraft/mods"
-    }
+    maven { url "https://cursemaven.com" }
 }
 
 dependencies {
-    compileOnly files("/home/Aelfwif/Downloads/PrismLauncher-Linux-Qt6-Portable-11.0.3/instances/RLCraft Dregora/minecraft/mods/CreativeCore_v1.10.71_mc1.12.2.jar")
+    compileOnly "curse.maven:creativecore-257814:4722163"
+    compileOnly "curse.maven:first-aid-276837:4414252"
+    compileOnly "curse.maven:potion-core-242872:2905184"
 }
 
 processResources {
