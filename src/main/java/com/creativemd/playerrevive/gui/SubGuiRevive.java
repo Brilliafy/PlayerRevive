@@ -106,18 +106,23 @@ public class SubGuiRevive extends SubGui {
 	
 	@Override
 	public boolean onKeyPressed(char character, int key) {
-		if (!((SubContainerRevive) container).isHelping && key == org.lwjgl.input.Keyboard.KEY_RETURN) {
-			GuiTextfield chat = (GuiTextfield) SubGuiRevive.this.get("chat");
-			
-			if (!chat.text.isEmpty() && (!chat.text.startsWith("/") || PlayerRevive.CONFIG.allowCommandsWhileBleeding)) {
-				gui.sendChat(chat.text);
-				
-				chat.setSelectionPos(0);
-				chat.selEnd = 0;
-				chat.cursorPosition = 0;
-				chat.text = "";
+		if (!((SubContainerRevive) container).isHelping) {
+			if (key == org.lwjgl.input.Keyboard.KEY_ESCAPE || (Minecraft.getMinecraft().gameSettings != null && key == Minecraft.getMinecraft().gameSettings.keyBindInventory.getKeyCode())) {
+				return true;
 			}
-			return true;
+			if (key == org.lwjgl.input.Keyboard.KEY_RETURN) {
+				GuiTextfield chat = (GuiTextfield) SubGuiRevive.this.get("chat");
+				
+				if (!chat.text.isEmpty() && (!chat.text.startsWith("/") || PlayerRevive.CONFIG.allowCommandsWhileBleeding)) {
+					gui.sendChat(chat.text);
+					
+					chat.setSelectionPos(0);
+					chat.selEnd = 0;
+					chat.cursorPosition = 0;
+					chat.text = "";
+				}
+				return true;
+			}
 		}
 		return super.onKeyPressed(character, key);
 	}

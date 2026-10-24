@@ -20,6 +20,12 @@ public class PlayerReviveConfig {
 	@CreativeConfig
 	public float damageMultiplierWhileReviving = 3.0F;
 	@CreativeConfig
+	public float damageMultiplierMin = 1.65F;
+	@CreativeConfig
+	public float damageMultiplierMax = 3.0F;
+	@CreativeConfig
+	public boolean multiplyOnlyEntityDamage = true;
+	@CreativeConfig
 	public boolean resetProgressOnDamage = true;
 	@CreativeConfig
 	public boolean stopTimerWhileReviving = true;
@@ -35,7 +41,7 @@ public class PlayerReviveConfig {
 	public boolean banPlayerAfterDeath = false;
 	
 	@CreativeConfig
-	public float exhaustion = 0.5F;
+	public float exhaustion = 0.04F;
 	
 	@CreativeConfig(type = ConfigSynchronization.CLIENT)
 	public boolean disableMusic = false;
@@ -56,6 +62,15 @@ public class PlayerReviveConfig {
 	public boolean allowCommandsWhileBleeding = false;
 	
 	@CreativeConfig
-	public List<String> bypassDamageSources = Arrays.asList("gorgon", "death.attack.sgcraft:transient", "death.attack.sgcraft:iris");
+	public boolean enableTotemCompatibility = true;
+	@CreativeConfig
+	public boolean enablePotionCoreRevivalCompatibility = true;
+	@CreativeConfig
+	public boolean enableFirstAidCompatibility = true;
+	@CreativeConfig
+	public boolean enableInSingleplayer = true;
+	
+	@CreativeConfig
+	public List<String> bypassDamageSources = Arrays.asList("outOfWorld", "gorgon", "death.attack.sgcraft:transient", "death.attack.sgcraft:iris");
 	
 }
