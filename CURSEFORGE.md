@@ -23,30 +23,30 @@ If you are running a 1.12.2 modpack with **First Aid**, **PotionCore**, or hardc
 
 This fork addresses these pain points with zero compromises:
 
-#### 1. 🩺 Seamless First Aid Compatibility
+#### 🩺 Seamless First Aid Compatibility
 * Downed players with 0 HP on head or body are safely caught by PlayerRevive before First Aid calls its internal death trigger.
 * Critical parts are preserved at $\ge 1.0\text{ HP}$ while bleeding.
 * When revived, First Aid's damage model is updated and automatically synchronized to the client with `MessageSyncDamageModel`.
 
-#### 2. 🛡️ Totem of Undying & PotionCore Support
+#### 🛡️ Totem of Undying & PotionCore Support
 * **Totem of Undying**: Holding a Totem in either hand takes priority over bleeding. When you take fatal damage, your Totem pops normally with vanilla sound, animations, and absorption/regeneration effects instead of forcing you into a bleedout.
 * **PotionCore Revival**: Players under the effect of PotionCore's Revival potion will consume the effect and heal immediately without downing.
 
-#### 3. ⚔️ Tactical, High-Stakes Reviving
+#### ⚔️ Tactical, High-Stakes Reviving
 * **Helper Vulnerability**: Players actively reviving a teammate take increased damage (configurable, default 1.65x – 3.0x). Teammates must provide cover or clear mobs first.
 * **Hit Interruption**: If the reviving player is damaged by an enemy, the revive progress resets back to 0.
 * **Countdown Pausing**: While a teammate is actively reviving you, the bleedout countdown timer pauses, ensuring clutch rescues are rewarded.
 * **Rebalanced Timing**: Default revive duration set to 10 seconds (200 ticks) and bleedout survival time set to 2 minutes (2400 ticks).
 
-#### 4. 🔒 Movement & Physics Fixes
+#### 🔒 Movement & Physics Fixes
 * Downed players cannot slide, bunny-hop, or jump away while bleeding out (`motionX = 0`, `motionZ = 0`, `motionY <= 0`).
 * Pressing `ESC` or the Inventory key while bleeding out will not accidentally close the revive GUI.
 
-#### 5. 📶 Dual-Channel Synchronization
+#### 📶 Dual-Channel Synchronization
 * Employs Forge's `SimpleNetworkWrapper` channel alongside CreativeCore to eliminate packet loss and ghost bleedout states on multiplayer servers.
 * Automatically syncs bleeding state to players entering render distance (`PlayerEvent.StartTracking`).
 
-#### 6. 👤 Singleplayer Toggle
+#### 👤 Singleplayer Toggle
 * Want to test configs, companion mods, or mechanics in singleplayer? Set `enableInSingleplayer = true` in `config/playerrevive.cfg`.
 
 ---
