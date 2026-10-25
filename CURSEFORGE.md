@@ -2,7 +2,7 @@
 
 **PlayerRevive: First Aid Edition** is a drop-in, modpack-optimized fork of [CreativeMD's PlayerRevive](https://www.curseforge.com/minecraft/mc-mods/playerrevive) for **Minecraft 1.12.2**.
 
-It solves long-standing modpack incompatibilities—most notably fixing the notorious **First Aid** instant death/limb desync issue and **Totem of Undying** bypasses—while introducing high-stakes, tactical revival mechanics for multiplayer co-op.
+It solves long-standing modpack incompatibilities most notably fixing the notorious **First Aid** instant death/limb desync issue and **Totem of Undying** bypasses while introducing high-stakes, tactical revival mechanics for multiplayer co-op.
 
 ---
 
