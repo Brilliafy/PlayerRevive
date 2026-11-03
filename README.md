@@ -1,3 +1,9 @@
+> [!WARNING]
+> ### PROJECT UNMAINTAINED / ON INDEFINITE HIATUS
+> **This project is no longer actively maintained and is on indefinite hiatus.**
+> No further updates, feature additions, or bug fixes will be provided. The repository is archived and read-only. Anyone is welcome to fork this project and continue development under the terms of the open-source license.
+
+
 # PlayerRevive: First Aid Edition (Minecraft 1.12.2)
 
 [![Minecraft 1.12.2](https://img.shields.io/badge/Minecraft-1.12.2-blue.svg)](https://minecraft.net/)
